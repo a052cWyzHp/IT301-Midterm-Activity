@@ -1,17 +1,8 @@
 <?php
-$db_server = "localhost";
-$db_user = "root";
-$db_pass = "";
-$db_name = "product";
-try{
-    $pdo = new PDO("mysql:host=$db_server;dbname=$db_name", $db_user, $db_pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false
-    ]);
-}
-catch(PDOException $e){
-    die("Connection to the database failed.");
+require 'config.php';
+if (empty($_SESSION['userID'])) {
+    header('Location: login.php');
+    exit();
 }
 
 if (isset($_POST['add_record'])) {
@@ -27,7 +18,7 @@ if (isset($_POST['add_record'])) {
         exit();
     }
     try {
-        $stmt = $pdo->prepare("INSERT INTO productList (name, category, price, stock, supplier, description) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO products (name, category, price, stock, supplier, description) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([$name, $category, $price, $stock, $supplier, $description]);
         header("Location: index.php?status=added");
         exit;
@@ -38,7 +29,7 @@ if (isset($_POST['add_record'])) {
 
 if (isset($_POST['delete_record'])) {
     try {
-        $stmt = $pdo->prepare("DELETE FROM productList WHERE id = ?");
+        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
         $stmt->execute([$_POST['delete_record']]);
         header("Location: index.php?status=deleted");
         exit;
@@ -61,7 +52,7 @@ if (isset($_POST['edit_record'])) {
     }
 
     try {
-        $stmt = $pdo->prepare("UPDATE productList SET name = ?, category = ?, price = ?, stock = ?, supplier = ?, description = ? WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE products SET name = ?, category = ?, price = ?, stock = ?, supplier = ?, description = ? WHERE id = ?");
         $stmt->execute([$name, $category, $price, $stock, $supplier, $description, $_POST['edit_record']]);
         header("Location: index.php?status=updated");
         exit;
@@ -71,7 +62,7 @@ if (isset($_POST['edit_record'])) {
 }
 
 try {
-    $stmt = $pdo->query("SELECT * FROM productList ORDER BY id ASC");
+    $stmt = $pdo->query("SELECT * FROM products ORDER BY id ASC");
     $products = $stmt->fetchAll();
 } catch (PDOException $e) {
     die("Failed to pull records from the database");
@@ -127,9 +118,25 @@ html {font-family: Arial, Helvetica, sans-serif;}
     border: 1px solid black;
     cursor: pointer;
 }
+
+.logoutBox {
+    display: inline-block;
+    position: absolute;
+    z-index: 2;
+    pointer-events: auto;
+    margin-left: 50px;
+}
+.logoutBox button[type="submit"] {
+    font-size: 1.5rem;
+}
+
 </style>
 <body>
-
+<div class="logoutBox">
+    <form action="logout.php">
+        <button type="submit">Log Out</button>
+    </form>
+</div>
 <center><h1>Product List</h1></center>
 <div class="addForm-section">
     <form method="POST" class="addForm">
